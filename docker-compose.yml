@@ -10,6 +10,7 @@ services:
       POSTGRES_DB: cryptocurrency_transactions
     volumes:
       - pg-data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
 
 volumes:
   pg-data:
