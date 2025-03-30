@@ -5,12 +5,19 @@ use std::io::Read;
 #[derive(Deserialize)]
 pub struct Config {
     pub api: Api,
+    pub db: Db,
 }
 
 #[derive(Clone, Deserialize)]
 pub struct Api {
     pub bind: String,
     pub workers: usize,
+}
+
+#[derive(Clone, Deserialize)]
+pub struct Db {
+    pub url: String,
+    pub max_connections: u32,
 }
 
 pub fn load_config() -> Result<Config, Box<dyn std::error::Error>> {
