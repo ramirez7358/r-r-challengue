@@ -3,7 +3,7 @@ use crate::modules::transactions::services::{
 };
 use actix_web::web;
 
-mod repository;
+pub mod repository;
 mod request;
 mod response;
 mod services;

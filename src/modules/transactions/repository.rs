@@ -12,7 +12,7 @@ pub(crate) async fn get_all_transactions(
     Ok(transactions)
 }
 
-pub(crate) async fn get_transactions_by_address(
+pub async fn get_transactions_by_address(
     pool: &PgPool,
     address: &str,
 ) -> Result<Vec<Transaction>, Box<dyn Error>> {

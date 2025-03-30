@@ -2,7 +2,7 @@ mod services;
 
 use crate::api::services::alive;
 use crate::configurations::load_config;
-use crate::modules::transactions;
+use crate::modules::{transactions, wallet};
 use actix_web::dev::{Server, Service};
 use actix_web::http::StatusCode;
 use actix_web::{App, HttpResponse, HttpServer, web};
@@ -59,7 +59,8 @@ pub async fn start_api() -> std::io::Result<()> {
                             .service(alive)
                             .wrap_fn(|s, r| r.call(s)),
                     )
-                    .service(web::scope("/transactions").configure(transactions::api_config)),
+                    .service(web::scope("/transactions").configure(transactions::api_config))
+                    .service(web::scope("/wallet").configure(wallet::api_config)),
             )
     })
     .workers(api_workers);
