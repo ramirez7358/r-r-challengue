@@ -1,6 +1,7 @@
 use crate::api::start_api;
 
 mod api;
+mod configurations;
 
 #[actix_rt::main]
 async fn main() {
