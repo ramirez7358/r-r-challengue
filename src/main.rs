@@ -2,6 +2,7 @@ use crate::api::start_api;
 
 mod api;
 mod configurations;
+mod modules;
 
 #[actix_rt::main]
 async fn main() {

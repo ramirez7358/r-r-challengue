@@ -2,8 +2,11 @@ mod services;
 
 use crate::api::services::alive;
 use crate::configurations::load_config;
+use crate::modules::transactions;
 use actix_web::dev::{Server, Service};
-use actix_web::{App, HttpServer, web};
+use actix_web::http::StatusCode;
+use actix_web::{App, HttpResponse, HttpServer, web};
+use serde::Serialize;
 use sqlx::postgres::PgPoolOptions;
 use std::io::ErrorKind;
 use tracing::{error, info};
@@ -50,11 +53,13 @@ pub async fn start_api() -> std::io::Result<()> {
             .app_data(config_data.clone())
             .app_data(pool.clone())
             .service(
-                web::scope("/api").service(
-                    web::scope("/alive")
-                        .service(alive)
-                        .wrap_fn(|s, r| r.call(s)),
-                ),
+                web::scope("/api")
+                    .service(
+                        web::scope("/alive")
+                            .service(alive)
+                            .wrap_fn(|s, r| r.call(s)),
+                    )
+                    .service(web::scope("/transactions").configure(transactions::api_config)),
             )
     })
     .workers(api_workers);
@@ -62,4 +67,11 @@ pub async fn start_api() -> std::io::Result<()> {
     server = http_server.bind(api_bind)?.run();
     info!("API started successfully!");
     server.await
+}
+
+pub fn build_json_response<T>(response: T, status_code: StatusCode) -> HttpResponse
+where
+    T: Serialize,
+{
+    HttpResponse::build(status_code).json(response)
 }
