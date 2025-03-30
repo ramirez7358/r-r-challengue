@@ -13,9 +13,11 @@ pub async fn start_api() -> std::io::Result<()> {
 
     let http_server = HttpServer::new(move || {
         App::new().service(
-            web::scope("/alive")
-                .service(alive)
-                .wrap_fn(|s, r| r.call(s)),
+            web::scope("/api").service(
+                web::scope("/alive")
+                    .service(alive)
+                    .wrap_fn(|s, r| r.call(s)),
+            ),
         )
     })
     .workers(32);
