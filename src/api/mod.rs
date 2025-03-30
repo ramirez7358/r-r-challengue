@@ -33,7 +33,7 @@ pub async fn start_api() -> std::io::Result<()> {
     {
         Ok(pool) => {
             println!("Successfully connected to database");
-            pool
+            web::Data::new(pool)
         }
         Err(e) => {
             println!("Failed to connect to database: {}", e);
