@@ -68,6 +68,11 @@ async fn create_transaction(
 
     let transaction: Transaction = body.into_inner().into();
 
+    let errors = transaction.validate();
+    if !errors.is_empty() {
+        return build_json_response(errors, StatusCode::BAD_REQUEST);
+    }
+
     match transaction.insert(pool).await {
         Ok(id) => build_json_response(id, StatusCode::CREATED),
         Err(e) => {

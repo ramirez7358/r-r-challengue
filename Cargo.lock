@@ -1603,6 +1603,7 @@ dependencies = [
  "actix-rt",
  "actix-web",
  "chrono",
+ "regex",
  "rust_decimal",
  "serde",
  "serde_json",
