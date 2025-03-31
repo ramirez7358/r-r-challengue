@@ -3,13 +3,13 @@ mod services;
 use crate::api::services::alive;
 use crate::configurations::load_config;
 use crate::modules::{transactions, wallet};
+use actix_cors::Cors;
 use actix_web::dev::{Server, Service};
 use actix_web::http::StatusCode;
 use actix_web::{App, HttpResponse, HttpServer, web};
 use serde::Serialize;
 use sqlx::postgres::PgPoolOptions;
 use std::io::ErrorKind;
-use actix_cors::Cors;
 use tracing::{error, info};
 
 pub async fn start_api() -> std::io::Result<()> {
@@ -55,7 +55,7 @@ pub async fn start_api() -> std::io::Result<()> {
                 Cors::default()
                     .allow_any_origin()
                     .allow_any_method()
-                    .allow_any_header()
+                    .allow_any_header(),
             )
             .app_data(config_data.clone())
             .app_data(pool.clone())

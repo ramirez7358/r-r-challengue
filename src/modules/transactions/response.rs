@@ -1,4 +1,5 @@
-use crate::modules::transactions::request::{CreateTransactionRequest, TransactionType};
+use crate::modules::transactions::TransactionType;
+use crate::modules::transactions::request::CreateTransactionRequest;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize, Serializer};
 use sqlx::{FromRow, PgPool};
@@ -13,7 +14,7 @@ pub struct Transaction {
     pub address_to: String,
     pub amount: Decimal,
     #[sqlx(rename = "type")]
-    pub transaction_type: String,
+    pub transaction_type: TransactionType,
     #[serde(
         skip_serializing_if = "Option::is_none",
         serialize_with = "serialize_primitive_date"
@@ -46,10 +47,7 @@ impl From<CreateTransactionRequest> for Transaction {
             address_from: request.address_from,
             address_to: request.address_to,
             amount: request.amount,
-            transaction_type: match request.transaction_type {
-                TransactionType::Deposit => "deposit".to_string(),
-                TransactionType::Withdrawal => "withdrawal".to_string(),
-            },
+            transaction_type: request.transaction_type,
             created_at: None,
         }
     }
