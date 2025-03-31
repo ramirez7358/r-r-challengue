@@ -9,6 +9,7 @@ use actix_web::{App, HttpResponse, HttpServer, web};
 use serde::Serialize;
 use sqlx::postgres::PgPoolOptions;
 use std::io::ErrorKind;
+use actix_cors::Cors;
 use tracing::{error, info};
 
 pub async fn start_api() -> std::io::Result<()> {
@@ -50,6 +51,12 @@ pub async fn start_api() -> std::io::Result<()> {
 
     let http_server = HttpServer::new(move || {
         App::new()
+            .wrap(
+                Cors::default()
+                    .allow_any_origin()
+                    .allow_any_method()
+                    .allow_any_header()
+            )
             .app_data(config_data.clone())
             .app_data(pool.clone())
             .service(
