@@ -17,19 +17,8 @@ else
   echo "Rust is already installed."
 fi
 
-echo "Cloning the repository..."
-if [ ! -d "r-r-challengue" ]; then
-  git clone https://github.com/ramirez7358/r-r-challengue.git
-else
-  echo "Repository already exists. Pulling latest changes..."
-  cd r-r-challengue
-  git pull origin main
-fi
-
-cd r-r-challengue
-
 echo "Copying environment file..."
-cp -n env/env_example.json env/env.json || echo "env.json already exists, skipping copy."
+cp -n env/env_docker.json env/env.json || echo "env.json already exists, skipping copy."
 
 echo "Building Docker containers..."
 docker-compose build
