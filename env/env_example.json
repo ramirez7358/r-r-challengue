@@ -1,10 +1,10 @@
 {
   "api": {
-    "bind": "127.0.0.1:8080",
+    "bind": "0.0.0.0:8080",
     "workers": 32
   },
   "db": {
-    "url": "postgres://rr-challenge:rr-challenge@localhost:5432/cryptocurrency_transactions",
+    "url": "postgres://rr-challenge:rr-challenge@db:5432/cryptocurrency_transactions?options=-c%20search_path=cryptocurrency_transactions,public",
     "max_connections": 5
   }
 }
