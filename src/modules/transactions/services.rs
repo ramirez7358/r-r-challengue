@@ -1,4 +1,4 @@
-use crate::api::build_json_response;
+use crate::api::{ErrorResponse, build_json_response};
 use crate::modules::transactions::repository::{get_all_transactions, get_transactions_by_address};
 use crate::modules::transactions::request::CreateTransactionRequest;
 use crate::modules::transactions::response::Transaction;
@@ -68,9 +68,23 @@ async fn create_transaction(
 
     let transaction: Transaction = body.into_inner().into();
 
-    let errors = transaction.validate();
+    let previous_transactions =
+        match get_transactions_by_address(pool, &transaction.address_from).await {
+            Ok(transactions) => transactions,
+            Err(err) => {
+                eprintln!("Failed to fetch transactions: {}", err);
+
+                return if err.downcast_ref::<sqlx::Error>().is_some() {
+                    HttpResponse::InternalServerError().json("Database error occurred")
+                } else {
+                    HttpResponse::InternalServerError().json("An unexpected error occurred")
+                };
+            }
+        };
+
+    let errors = transaction.validate(&previous_transactions);
     if !errors.is_empty() {
-        return build_json_response(errors, StatusCode::BAD_REQUEST);
+        return build_json_response(ErrorResponse { message: errors }, StatusCode::BAD_REQUEST);
     }
 
     match transaction.insert(pool).await {

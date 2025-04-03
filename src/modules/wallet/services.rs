@@ -31,29 +31,39 @@ pub async fn get_balance(req: HttpRequest, path: web::Path<String>) -> impl Resp
         }
     };
 
-    let balance = calculate_balance(address, transactions);
+    let balance = calculate_balance(&address, &transactions);
 
     build_json_response(balance, StatusCode::OK)
 }
 
-fn calculate_balance(address: String, transactions: Vec<Transaction>) -> Decimal {
-    let mut balance = Decimal::new(0, 0);
+pub fn calculate_balance(address: &str, transactions: &[Transaction]) -> Decimal {
+    let balance = transactions
+        .iter()
+        .fold(Decimal::new(0, 0), |mut balance, tx| {
+            match tx.transaction_type {
+                TransactionType::Deposit => {
+                    if tx.address_to == address {
+                        balance += tx.amount;
+                    } else {
+                        balance -= tx.amount;
+                    }
+                }
+                TransactionType::Withdrawal => {
+                    if tx.address_from == address {
+                        balance -= tx.amount;
+                    } else {
+                        balance += tx.amount;
+                    }
+                }
+            }
+            balance
+        });
 
-    for tx in transactions {
-        match tx.transaction_type {
-            TransactionType::Deposit => {
-                if tx.address_to == address {
-                    balance += tx.amount;
-                }
-            }
-            TransactionType::Withdrawal => {
-                if tx.address_from == address {
-                    balance -= tx.amount;
-                }
-            }
-        }
+    if balance < Decimal::ZERO {
+        Decimal::ZERO
+    } else {
+        balance
     }
-    balance
 }
 
 #[cfg(test)]
@@ -90,10 +100,7 @@ mod tests {
 
     #[test]
     fn test_empty_transactions() {
-        assert_eq!(
-            calculate_balance(MY_ADDRESS.to_string(), vec![]),
-            Decimal::new(0, 0)
-        );
+        assert_eq!(calculate_balance(MY_ADDRESS, &vec![]), Decimal::new(0, 0));
     }
 
     #[test]
@@ -115,7 +122,7 @@ mod tests {
             ),
         ];
         assert_eq!(
-            calculate_balance(MY_ADDRESS.to_string(), transactions),
+            calculate_balance(MY_ADDRESS, &transactions),
             Decimal::new(300, 0)
         );
     }
@@ -139,7 +146,7 @@ mod tests {
             ),
         ];
         assert_eq!(
-            calculate_balance(MY_ADDRESS.to_string(), transactions),
+            calculate_balance(MY_ADDRESS, &transactions),
             Decimal::new(-150, 0)
         );
     }
@@ -170,7 +177,7 @@ mod tests {
             ),
         ];
         assert_eq!(
-            calculate_balance(MY_ADDRESS.to_string(), transactions),
+            calculate_balance(MY_ADDRESS, &transactions),
             Decimal::new(250, 0)
         );
     }
@@ -194,7 +201,7 @@ mod tests {
             ),
         ];
         assert_eq!(
-            calculate_balance(MY_ADDRESS.to_string(), transactions),
+            calculate_balance(MY_ADDRESS, &transactions),
             Decimal::new(0, 0)
         );
     }
@@ -206,7 +213,7 @@ mod tests {
             create_tx("0x333", "0x444", 50, TransactionType::Withdrawal, None),
         ];
         assert_eq!(
-            calculate_balance(MY_ADDRESS.to_string(), transactions),
+            calculate_balance(MY_ADDRESS, &transactions),
             Decimal::new(0, 0)
         );
     }
@@ -224,7 +231,7 @@ mod tests {
             ),
         ];
         assert_eq!(
-            calculate_balance(MY_ADDRESS.to_string(), transactions),
+            calculate_balance(MY_ADDRESS, &transactions),
             Decimal::new(0, 0)
         );
     }
@@ -256,7 +263,7 @@ mod tests {
             ),
         ];
         assert_eq!(
-            calculate_balance(MY_ADDRESS.to_string(), transactions),
+            calculate_balance(MY_ADDRESS, &transactions),
             Decimal::new(120, 0)
         );
     }

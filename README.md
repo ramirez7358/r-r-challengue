@@ -1,4 +1,4 @@
-# r-r-challengue
+# r-r-challenge
 
 ## Prerequisites
 
@@ -64,7 +64,7 @@ Follow these steps to set up and run the frontend:
     npm run dev
     ```
 
-The frontend will be available at `http://localhost:3000` by default.
+The frontend will be available at `http://localhost:5173` by default.
 
 ---
 

@@ -80,8 +80,6 @@ export async function createTransaction(transactionData) {
     });
 
     if (!response.ok) {
-      const contentType = response.headers.get("Content-Type");
-      console.log(contentType);
       const errorData = await response.json();
       throw new Error(
         errorData.message ||

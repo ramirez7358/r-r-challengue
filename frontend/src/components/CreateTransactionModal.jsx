@@ -36,7 +36,11 @@ function CreateTransactionModal({ onClose, onSuccess }) {
         onSuccess();
       }
     } catch (err) {
-      setError(err.message || "Failed to create transaction");
+      const errorParsed =
+        typeof err.message === "string"
+          ? err.message.split(",").join("\n")
+          : "Failed to create transaction";
+      setError(errorParsed || "Failed to create transaction");
       setIsSubmitting(false);
     }
   };

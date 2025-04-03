@@ -17,7 +17,6 @@ pub fn api_config(cfg: &mut web::ServiceConfig) {
 
 #[derive(Debug, Serialize, Deserialize, sqlx::Type)]
 #[sqlx(type_name = "VARCHAR")]
-#[serde(rename_all = "lowercase")]
 pub enum TransactionType {
     Deposit,
     Withdrawal,

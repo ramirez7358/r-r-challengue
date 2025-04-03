@@ -40,11 +40,11 @@ function TransactionList({ transactions }) {
                   <span
                     className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                     ${
-                      transaction.transaction_type === "deposit"
+                      transaction.transaction_type === "Deposit"
                         ? "bg-blue-100 text-blue-800"
                         : transaction.transaction_type === "refund"
                         ? "bg-green-100 text-green-800"
-                        : transaction.transaction_type === "withdrawal"
+                        : transaction.transaction_type === "Withdrawal"
                         ? "bg-purple-100 text-purple-800"
                         : "bg-gray-100 text-gray-800"
                     }`}

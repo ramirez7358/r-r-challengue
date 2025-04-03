@@ -80,3 +80,8 @@ where
 {
     HttpResponse::build(status_code).json(response)
 }
+
+#[derive(Serialize)]
+pub struct ErrorResponse {
+    pub message: Vec<String>,
+}
