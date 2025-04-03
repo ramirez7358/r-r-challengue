@@ -80,7 +80,9 @@ export async function createTransaction(transactionData) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      const contentType = response.headers.get("Content-Type");
+      console.log(contentType);
+      const errorData = await response.json();
       throw new Error(
         errorData.message ||
           `API error: ${response.status} ${response.statusText}`

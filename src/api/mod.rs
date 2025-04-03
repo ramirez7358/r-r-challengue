@@ -20,10 +20,7 @@ pub async fn start_api() -> std::io::Result<()> {
         Ok(cfg) => cfg,
         Err(e) => {
             error!("Failed to load configuration: {}", e);
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Failed to load config",
-            ));
+            return Err(std::io::Error::other("Failed to load config"));
         }
     };
 

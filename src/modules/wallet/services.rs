@@ -31,18 +31,26 @@ pub async fn get_balance(req: HttpRequest, path: web::Path<String>) -> impl Resp
         }
     };
 
-    let balance = calculate_balance(transactions);
+    let balance = calculate_balance(address, transactions);
 
     build_json_response(balance, StatusCode::OK)
 }
 
-fn calculate_balance(transactions: Vec<Transaction>) -> Decimal {
+fn calculate_balance(address: String, transactions: Vec<Transaction>) -> Decimal {
     let mut balance = Decimal::new(0, 0);
 
     for tx in transactions {
         match tx.transaction_type {
-            TransactionType::Deposit => balance += tx.amount,
-            TransactionType::Withdrawal => balance -= tx.amount,
+            TransactionType::Deposit => {
+                if tx.address_to == address {
+                    balance += tx.amount;
+                }
+            }
+            TransactionType::Withdrawal => {
+                if tx.address_from == address {
+                    balance -= tx.amount;
+                }
+            }
         }
     }
     balance
@@ -54,7 +62,12 @@ mod tests {
     use rust_decimal::Decimal;
     use time::{PrimitiveDateTime, format_description};
 
+    const MY_ADDRESS: &str = "0xABC";
+    const OTHER_ADDRESS: &str = "0xDEF";
+
     fn create_tx(
+        from: &str,
+        to: &str,
         amount: i64,
         transaction_type: TransactionType,
         created_at: Option<&str>,
@@ -67,8 +80,8 @@ mod tests {
 
         Transaction {
             id: None,
-            address_from: "0x123".to_string(),
-            address_to: "0x456".to_string(),
+            address_from: from.to_string(),
+            address_to: to.to_string(),
             amount: Decimal::new(amount, 0),
             transaction_type,
             created_at: created_at_parsed,
@@ -77,61 +90,174 @@ mod tests {
 
     #[test]
     fn test_empty_transactions() {
-        assert_eq!(calculate_balance(vec![]), Decimal::new(0, 0));
+        assert_eq!(
+            calculate_balance(MY_ADDRESS.to_string(), vec![]),
+            Decimal::new(0, 0)
+        );
     }
 
     #[test]
-    fn test_only_deposits() {
+    fn test_only_deposits_to_me() {
         let transactions = vec![
-            create_tx(100, TransactionType::Deposit, None),
-            create_tx(200, TransactionType::Deposit, None),
+            create_tx(
+                OTHER_ADDRESS,
+                MY_ADDRESS,
+                100,
+                TransactionType::Deposit,
+                None,
+            ),
+            create_tx(
+                OTHER_ADDRESS,
+                MY_ADDRESS,
+                200,
+                TransactionType::Deposit,
+                None,
+            ),
         ];
-        assert_eq!(calculate_balance(transactions), Decimal::new(300, 0));
+        assert_eq!(
+            calculate_balance(MY_ADDRESS.to_string(), transactions),
+            Decimal::new(300, 0)
+        );
     }
 
     #[test]
-    fn test_only_withdrawals() {
+    fn test_only_withdrawals_from_me() {
         let transactions = vec![
-            create_tx(100, TransactionType::Withdrawal, None),
-            create_tx(50, TransactionType::Withdrawal, None),
+            create_tx(
+                MY_ADDRESS,
+                OTHER_ADDRESS,
+                100,
+                TransactionType::Withdrawal,
+                None,
+            ),
+            create_tx(
+                MY_ADDRESS,
+                OTHER_ADDRESS,
+                50,
+                TransactionType::Withdrawal,
+                None,
+            ),
         ];
-        assert_eq!(calculate_balance(transactions), Decimal::new(-150, 0));
+        assert_eq!(
+            calculate_balance(MY_ADDRESS.to_string(), transactions),
+            Decimal::new(-150, 0)
+        );
     }
 
     #[test]
-    fn test_mixed_transactions() {
+    fn test_mixed_transactions_to_and_from_me() {
         let transactions = vec![
-            create_tx(100, TransactionType::Deposit, Some("2025-03-30 12:00:00")),
-            create_tx(50, TransactionType::Withdrawal, Some("2025-03-30 13:00:00")),
-            create_tx(200, TransactionType::Deposit, Some("2025-03-30 14:00:00")),
+            create_tx(
+                OTHER_ADDRESS,
+                MY_ADDRESS,
+                100,
+                TransactionType::Deposit,
+                None,
+            ),
+            create_tx(
+                MY_ADDRESS,
+                OTHER_ADDRESS,
+                50,
+                TransactionType::Withdrawal,
+                None,
+            ),
+            create_tx(
+                OTHER_ADDRESS,
+                MY_ADDRESS,
+                200,
+                TransactionType::Deposit,
+                None,
+            ),
         ];
-        assert_eq!(calculate_balance(transactions), Decimal::new(250, 0));
+        assert_eq!(
+            calculate_balance(MY_ADDRESS.to_string(), transactions),
+            Decimal::new(250, 0)
+        );
     }
 
     #[test]
-    fn test_balance_zero() {
+    fn test_balance_zero_equal_in_and_out() {
         let transactions = vec![
-            create_tx(150, TransactionType::Deposit, None),
-            create_tx(150, TransactionType::Withdrawal, None),
+            create_tx(
+                OTHER_ADDRESS,
+                MY_ADDRESS,
+                150,
+                TransactionType::Deposit,
+                None,
+            ),
+            create_tx(
+                MY_ADDRESS,
+                OTHER_ADDRESS,
+                150,
+                TransactionType::Withdrawal,
+                None,
+            ),
         ];
-        assert_eq!(calculate_balance(transactions), Decimal::new(0, 0));
+        assert_eq!(
+            calculate_balance(MY_ADDRESS.to_string(), transactions),
+            Decimal::new(0, 0)
+        );
     }
 
     #[test]
-    fn test_with_created_at_none() {
+    fn test_transactions_not_involving_me() {
         let transactions = vec![
-            create_tx(100, TransactionType::Deposit, None),
-            create_tx(50, TransactionType::Withdrawal, None),
+            create_tx("0x111", "0x222", 100, TransactionType::Deposit, None),
+            create_tx("0x333", "0x444", 50, TransactionType::Withdrawal, None),
         ];
-        assert_eq!(calculate_balance(transactions), Decimal::new(50, 0));
+        assert_eq!(
+            calculate_balance(MY_ADDRESS.to_string(), transactions),
+            Decimal::new(0, 0)
+        );
     }
 
     #[test]
     fn test_zero_amount_transaction() {
         let transactions = vec![
-            create_tx(0, TransactionType::Deposit, None),
-            create_tx(0, TransactionType::Withdrawal, None),
+            create_tx(OTHER_ADDRESS, MY_ADDRESS, 0, TransactionType::Deposit, None),
+            create_tx(
+                MY_ADDRESS,
+                OTHER_ADDRESS,
+                0,
+                TransactionType::Withdrawal,
+                None,
+            ),
         ];
-        assert_eq!(calculate_balance(transactions), Decimal::new(0, 0));
+        assert_eq!(
+            calculate_balance(MY_ADDRESS.to_string(), transactions),
+            Decimal::new(0, 0)
+        );
+    }
+
+    #[test]
+    fn test_mixed_with_irrelevant_transactions() {
+        let transactions = vec![
+            create_tx(
+                OTHER_ADDRESS,
+                MY_ADDRESS,
+                100,
+                TransactionType::Deposit,
+                None,
+            ),
+            create_tx(
+                MY_ADDRESS,
+                OTHER_ADDRESS,
+                40,
+                TransactionType::Withdrawal,
+                None,
+            ),
+            create_tx("0x999", "0x888", 999, TransactionType::Deposit, None), // no afecta
+            create_tx(
+                OTHER_ADDRESS,
+                MY_ADDRESS,
+                60,
+                TransactionType::Deposit,
+                None,
+            ),
+        ];
+        assert_eq!(
+            calculate_balance(MY_ADDRESS.to_string(), transactions),
+            Decimal::new(120, 0)
+        );
     }
 }

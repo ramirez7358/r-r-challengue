@@ -9,7 +9,7 @@ function CreateTransactionModal({ onClose, onSuccess }) {
     address_from: "",
     address_to: "",
     amount: "",
-    transaction_type: "payment",
+    transaction_type: "Deposit",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -118,8 +118,8 @@ function CreateTransactionModal({ onClose, onSuccess }) {
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
-              <option value="withdrawal">Withdrawal</option>
-              <option value="deposit">Deposit</option>
+              <option value="Withdrawal">Withdrawal</option>
+              <option value="Deposit">Deposit</option>
             </select>
           </div>
 
